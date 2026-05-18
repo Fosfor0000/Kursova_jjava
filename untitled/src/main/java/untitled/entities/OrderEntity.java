@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import untitled.enums.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -30,7 +31,10 @@ public class OrderEntity {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
-    private String status;
+    // Замість String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status;
 
     @Column(columnDefinition = "TEXT")
     private String shippingAddress;

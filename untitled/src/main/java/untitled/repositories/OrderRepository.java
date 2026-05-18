@@ -3,6 +3,7 @@ package untitled.repositories;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import untitled.entities.OrderEntity;
+import untitled.enums.OrderStatus; // ВАЖЛИВИЙ ІМПОРТ
 
 import java.util.List;
 
@@ -11,6 +12,6 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     // Знайти всі замовлення конкретного клієнта
     List<OrderEntity> findByCustomer_CustomerId(Long customerId);
 
-    // Знайти замовлення за статусом
-    List<OrderEntity> findByStatus(String status);
+    // ЗМІНЕНО String НА OrderStatus
+    List<OrderEntity> findByStatus(OrderStatus status);
 }

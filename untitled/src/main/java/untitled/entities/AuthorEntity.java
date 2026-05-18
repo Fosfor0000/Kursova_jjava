@@ -1,5 +1,6 @@
 package untitled.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,7 @@ public class AuthorEntity {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @JsonIgnore // ДОДАТИ ТУТ ТЕЖ
     @OneToMany(mappedBy = "author")
     private List<BookEntity> books;
 }
