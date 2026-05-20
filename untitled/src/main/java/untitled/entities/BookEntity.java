@@ -43,7 +43,6 @@ public class BookEntity {
 
     private Integer publishedYear;
 
-    private String coverImage;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

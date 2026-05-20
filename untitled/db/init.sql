@@ -42,7 +42,6 @@ CREATE TABLE books (
     stock INTEGER DEFAULT 0,
     description TEXT,
     published_year INTEGER,
-    cover_image VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

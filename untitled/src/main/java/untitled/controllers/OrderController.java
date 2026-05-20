@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import untitled.dto.OrderDetailResponseDto;
 import untitled.dto.OrderRequestDto;
 import untitled.dto.OrderResponseDto;
 import untitled.entities.CustomerEntity;
@@ -67,6 +68,15 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Отримати деталі конкретного замовлення з книжками (Доступно для USER (свого) та ADMIN)")
+    public ResponseEntity<OrderDetailResponseDto> getOrderDetails(
+            @PathVariable(name = "id") Long id,
+            Principal principal) {
+        OrderDetailResponseDto response = orderService.getOrderDetails(id, principal.getName());
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @Operation(summary = "Оформити замовлення", description = "Створення нового замовлення. Розрахунок вартості та перевірка складських залишків виконуються на сервері.")
@@ -75,6 +85,14 @@ public class OrderController {
             Principal principal) {
         OrderResponseDto response = orderService.processOrder(request, principal.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+    @PatchMapping("/{id}/cancel")
+    @Operation(summary = "Скасувати власне замовлення (доступно для USER)")
+    public ResponseEntity<OrderResponseDto> cancelMyOrder(
+            @PathVariable(name = "id") Long id,
+            Principal principal) {
+        OrderResponseDto response = orderService.cancelOrder(id, principal.getName());
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}/status")

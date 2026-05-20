@@ -1,5 +1,6 @@
 package untitled.security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // Дозволяє використовувати анотації @PreAuthorize у контролерах
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -25,38 +26,30 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Вимкнення CSRF захисту через використання Stateless JWT токенів
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // Налаштування правил доступу до ресурсів
                 .authorizeHttpRequests(auth -> auth
-                        // Доступ до документації Swagger API
-                        .requestMatchers(
-                                "/v3/api-docs", "/v3/api-docs/**",
-                                "/swagger-ui/**", "/swagger-ui.html"
-                        ).permitAll()
-
-                        // Публічні ендпоінти для реєстрації та входу
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        // Відкритий доступ (тільки для читання) до каталогу товарів, категорій та авторів
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/books", "/api/books/**",
-                                "/api/categories", "/api/categories/**",
-                                "/api/authors", "/api/authors/**"
-                        ).permitAll()
-
-                        // Будь-які інші запити (зміна даних) вимагають авторизації
+                        .requestMatchers(HttpMethod.GET, "/api/books/**", "/api/categories/**", "/api/authors/**").permitAll()
                         .anyRequest().authenticated()
                 )
-
-                // Використання Stateless режиму (без збереження сесій на сервері)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
+                // ДОДАЄМО ОБРОБКУ ПОМИЛОК 401 ТА 403
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"status\": 401, \"error\": \"Unauthorized\", \"message\": \"Необхідна авторизація (відсутній або недійсний токен JWT)\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.getWriter().write("{\"status\": 403, \"error\": \"Forbidden\", \"message\": \"У вас немає прав для виконання цієї дії!\"}");
+                        })
+                )
                 .authenticationProvider(authenticationProvider)
-                // Інтеграція власного фільтра для перевірки JWT перед стандартною перевіркою
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

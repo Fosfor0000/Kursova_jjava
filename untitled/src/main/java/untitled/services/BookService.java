@@ -56,7 +56,6 @@ public class BookService {
         book.setStock(request.stock() != null ? request.stock() : 0);
         book.setDescription(request.description());
         book.setPublishedYear(request.publishedYear());
-        book.setCoverImage(request.coverImage());
 
         BookEntity savedBook = bookRepository.save(book);
         return mapToResponseDto(savedBook);
@@ -82,7 +81,6 @@ public class BookService {
                 .stock(book.getStock())
                 .description(book.getDescription())
                 .publishedYear(book.getPublishedYear())
-                .coverImage(book.getCoverImage())
                 .build();
     }
 }

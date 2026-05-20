@@ -13,6 +13,5 @@ public record BookResponseDto(
         BigDecimal price,
         Integer stock,
         String description,
-        Integer publishedYear,
-        String coverImage
+        Integer publishedYear
 ) {}

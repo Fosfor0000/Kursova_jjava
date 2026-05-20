@@ -2,6 +2,7 @@ package untitled.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,16 +11,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
-/**
- * Централізований обробник виключень для всього REST API.
- * Перехоплює помилки до того, як вони дійдуть до клієнта, і формує стандартизовану JSON-відповідь.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Обробка помилок автентифікації (неправильний логін або пароль).
-     */
+    // 401 - Помилка логіна/пароля
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
         ErrorResponse error = new ErrorResponse(
@@ -31,9 +26,31 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
-    /**
-     * Обробка кастомних бізнес-помилок (наприклад, "Недостатньо книг на складі").
-     */
+    // 403 - Недостатньо прав (наприклад, USER лізе в метод ADMIN)
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                "У вас немає прав для виконання цієї дії!"
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    // 404 - Ресурс не знайдено (книга, клієнт, категорія)
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    // 400 - Помилка бізнес-логіки (наприклад, "Немає книг на складі")
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex) {
         ErrorResponse error = new ErrorResponse(
@@ -45,10 +62,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    /**
-     * Обробка помилок валідації вхідних даних (DTO).
-     * Збирає всі помилки валідації (наприклад, порожні поля) в один зрозумілий рядок.
-     */
+    // 400 - Помилка валідації DTO
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         String errorMessage = ex.getBindingResult().getFieldErrors().stream()
@@ -64,10 +78,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    /**
-     * Глобальний перехоплювач для всіх непередбачених критичних помилок.
-     * Гарантує, що сервер не впаде, а поверне клієнту статус 500.
-     */
+    // 500 - Всі інші непередбачувані помилки
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex) {
         ErrorResponse error = new ErrorResponse(
